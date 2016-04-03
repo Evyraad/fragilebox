@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>fragilebox</artifactId>
+    <groupId>io.fragilebox</groupId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>box-client</artifactId>
+  <modelVersion>4.0.0</modelVersion>
+  <name>box-client</name>
+  <description>Web-based client for the FragileBox game</description>
+  <packaging>jar</packaging>
+
+  <properties>
+    <version.maven-jar-plugin>2.6</version.maven-jar-plugin>
+    <version.log4j1>1.7.20</version.log4j1>
+    
+    <docker.image>dsalychev/io.fragilebox.box-client:latest</docker.image>
+    <docker.from>jboss/base-jdk:8</docker.from>
+    <docker.host.address>localhost</docker.host.address>
+    <swarm.port>28080</swarm.port>
+  </properties>
+  
+  <build>
+    <!-- Resources configuration for the .jar -->
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>src/main/dart</directory>
+        <excludes>
+          <exclude>**/*.packages</exclude>
+          <exclude>**/*pubspec.lock</exclude>
+          <exclude>**/*pubspec.yaml</exclude>
+          <exclude>**/*.dart</exclude>
+        </excludes>
+      </resource>
+    </resources>
+    <!-- END Resources configuration for the .jar -->
+    
+    <plugins>
+      <plugin>
+        <groupId>org.wildfly.swarm</groupId>
+        <artifactId>wildfly-swarm-plugin</artifactId>
+        <configuration>
+          <mainClass>io.fragilebox.client.App</mainClass>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>package</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>            
+      
+      <!-- Dart plugin configuration -->
+      <plugin>
+        <groupId>com.github.dzwicker.dart</groupId>
+        <artifactId>dart-maven-plugin</artifactId>
+        <configuration>
+          <checkedMode>true</checkedMode>
+          <dartSdk>${env.DART_SDK}</dartSdk>
+          <testFailureIgnore>false</testFailureIgnore>
+          <outputDirectory>target/classes</outputDirectory>
+        </configuration>
+        <executions>
+          <execution>
+            <id>compile</id>
+            <goals>
+              <goal>dart2js</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- END Dart plugin configuration -->
+      
+      <!-- Docker plugin configuration -->
+      <plugin>
+        <groupId>org.jolokia</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <configuration>
+          <images>
+            <image>
+              <name>${docker.image}</name>
+              <build>
+                <from>${docker.from}</from>
+                <maintainer>markus@jboss.org</maintainer>
+                <ports>
+                  <port>8080</port>
+                </ports>
+                <entryPoint>
+                  <exec>
+                    <arg>java</arg>
+                    <arg>-jar</arg>
+                    <arg>
+                      /opt/fragilebox/box-client.jar
+                    </arg>
+                  </exec>
+                </entryPoint>
+                <assembly>
+                  <inline>
+                    <dependencySets>
+                      <dependencySet>
+                        <useProjectAttachments>true
+                        </useProjectAttachments>
+                        <includes>
+                          <include>
+                            io.fragilebox:box-client:jar:swarm
+                          </include>
+                        </includes>
+                        <outputFileNameMapping>
+                          box-client.jar
+                        </outputFileNameMapping>
+                      </dependencySet>
+                    </dependencySets>
+                  </inline>
+                  <user>jboss:jboss:jboss</user>
+                  <basedir>/opt/fragilebox</basedir>
+                </assembly>
+              </build>
+              <run>
+                <ports>
+                  <!-- Map container port 8080 to a dynamical port -->
+                  <port>${swarm.port}:8080</port>
+                </ports>
+                <log>
+                  <color>yellow</color>
+                  <prefix>SWARM</prefix>
+                </log>
+              </run>
+            </image>
+          </images>
+        </configuration>
+      </plugin>
+      <!-- END Docker plugin configuration -->
+    </plugins>
+  </build>
+  
+  <dependencies>
+    <dependency>
+      <groupId>org.wildfly.swarm</groupId>
+      <artifactId>undertow</artifactId>
+      <version>${version.wildfly-swarm}</version>
+    </dependency>
+    
+    <!-- Logging -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>${version.log4j1}</version>
+    </dependency>
+    <!-- END Logging -->
+  </dependencies>
+</project>

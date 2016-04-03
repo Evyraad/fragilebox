@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>fragilebox</artifactId>
+    <groupId>io.fragilebox</groupId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>box-server</artifactId>
+  <modelVersion>4.0.0</modelVersion>
+  <name>box-server</name>
+  <description>JavaEE server for the FragileBox game</description>
+  <packaging>war</packaging>
+
+  <properties>
+    <version.log4j2>2.4.1</version.log4j2>
+    
+    <docker.image>dsalychev/io.fragilebox.box-server:latest</docker.image>
+    <docker.from>jboss/base-jdk:8</docker.from>
+    <docker.host.address>localhost</docker.host.address>
+    <swarm.port>18080</swarm.port>
+  </properties>    
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.wildfly.swarm</groupId>
+        <artifactId>wildfly-swarm-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+      </plugin>
+
+      <!-- Docker plugin configuration -->
+      <plugin>
+        <groupId>org.jolokia</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <configuration>
+          <images>
+            <image>
+              <name>${docker.image}</name>
+              <build>
+                <from>${docker.from}</from>
+                <maintainer>markus@jboss.org</maintainer>
+                <ports>
+                  <port>8080</port>
+                </ports>
+                <entryPoint>
+                  <exec>
+                    <arg>java</arg>
+                    <arg>-jar</arg>
+                    <arg>
+                      /opt/fragilebox/box-server.jar
+                    </arg>
+                  </exec>
+                </entryPoint>
+                <assembly>
+                  <inline>
+                    <dependencySets>
+                      <dependencySet>
+                        <useProjectAttachments>true
+                        </useProjectAttachments>
+                        <includes>
+                          <include>
+                            io.fragilebox:box-server:jar:swarm
+                          </include>
+                        </includes>
+                        <outputFileNameMapping>
+                          box-server.jar
+                        </outputFileNameMapping>
+                      </dependencySet>
+                    </dependencySets>
+                  </inline>
+                  <user>jboss:jboss:jboss</user>
+                  <basedir>/opt/fragilebox</basedir>
+                </assembly>
+              </build>
+              <run>
+                <ports>
+                  <!-- Map container port 8080 to a dynamical port -->
+                  <port>${swarm.port}:8080</port>
+                </ports>
+                <log>
+                  <color>yellow</color>
+                  <prefix>SWARM</prefix>
+                </log>
+              </run>
+            </image>
+          </images>
+        </configuration>
+      </plugin>
+      <!-- END Docker plugin configuration -->      
+    </plugins>
+  </build>
+  
+  <dependencies>
+    <!-- Logging -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <version>${version.log4j2}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>${version.log4j2}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>${version.log4j2}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-web</artifactId>
+      <version>${version.log4j2}</version>
+    </dependency>
+    <!-- END Logging -->
+  </dependencies>
+  
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>findbugs-maven-plugin</artifactId>
+        <version>${version.findbugs-maven-plugin}</version>
+      </plugin>
+    </plugins>
+  </reporting>
+</project>
