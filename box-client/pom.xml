@@ -124,7 +124,7 @@
               </build>
               <run>
                 <ports>
-                  <!-- Map container port 8080 to a dynamical port -->
+                  <!-- Map container port to ${swarm.port} -->
                   <port>${swarm.port}:8080</port>
                 </ports>
                 <log>
