@@ -45,7 +45,13 @@ void initWebSocket([int retrySeconds = 2]) {
   });
 
   ws.onMessage.listen((MessageEvent e) {
-    ByteBuffer buf = e.data;
+    final ByteBuffer buf = e.data;
+    BenchmarkMessage msg = new BenchmarkMessage.fromBuffer(buf.asUint8List());
+
+    switch (msg.type) {
+
+    }
+
     Message request = new Message.fromBuffer(buf.asUint8List());
 
     if (MessageType.BENCHMARK_REQUEST == request.type) {
@@ -60,5 +66,5 @@ void initWebSocket([int retrySeconds = 2]) {
 }
 
 void main() {
-  initWebSocket();
+  //initWebSocket();
 }

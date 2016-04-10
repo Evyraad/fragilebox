@@ -1,0 +1,52 @@
+package io.fragilebox.protocol;
+
+//***
+// Messages to measure overhead of the FragileBox Protocol.
+//***
+message BenchmarkResult {
+  // Time to process one message, in microseconds
+  optional int64 messageTime = 1;
+  // Number of processed messages
+  optional int32 processedMessages = 2;
+}
+
+message BenchmarkOptions {
+  // Number of request messages to send within benchmark
+  optional int32 benchmarkSize = 3;
+  // Size of payload (should be divisible by 4) in one message
+  optional int32 payloadSize = 4;
+}
+
+// Message to organize benchmark flow.
+//
+// Messages with type RUN are used to tell server to start sending benchmark
+// messages. It is possible to configure the benchmark by modifying "options" 
+// field. Identifier of the "run" message matches one of the "stop" message.
+//
+// Messages with type STOP are used by the server to tell the client that 
+// benchmark is finished (normally or unexpectedly). These messages contain
+// "result" field.
+//
+// Messages with type PAYLOAD_REQUEST are expected to contain non-zero payload.
+// Their identifiers will be used to match PAYLOAD_RESPONSE messages.
+//
+// Messages with type PAYLOAD_RESPONSE are expected to contain zero payload.
+// They should be used by client to tell the server that request has been 
+// processed. Its identifier should match one from the processed request.
+message BenchmarkMessage {
+  enum Type {
+    RUN = 0;
+    STOP = 1;
+    PAYLOAD_REQUEST = 2;
+    PAYLOAD_RESPONSE = 3;
+  }
+
+  required Type type = 1;
+  required int32 id = 2; 
+  repeated sfixed32 payload = 3;
+  optional BenchmarkOptions options = 4;
+  optional BenchmarkResult result = 5;
+}
+//***
+// END Messages to measure overhead of the FragileBox Protocol.
+//***

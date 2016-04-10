@@ -7,22 +7,17 @@
     <artifactId>fragilebox</artifactId>    
     <version>1.0-SNAPSHOT</version>
   </parent>
-  <artifactId>box-client</artifactId>
+  <artifactId>protocol-benchmark-client</artifactId>
   <version>1.0-SNAPSHOT</version>
   <modelVersion>4.0.0</modelVersion>  
   <packaging>jar</packaging>
   
-  <name>box-client</name>
-  <description>Web-based client for the FragileBox game</description>
+  <name>protocol-benchmark-client</name>
+  <description>Client part of the benchmark to measure protocol overhead of the FragileBox game</description>
 
   <properties>
     <version.maven-jar-plugin>2.6</version.maven-jar-plugin>
     <version.log4j1>1.7.20</version.log4j1>
-    
-    <docker.image>dsalychev/io.fragilebox.box-client:latest</docker.image>
-    <docker.from>jboss/base-jdk:8</docker.from>
-    <docker.host.address>localhost</docker.host.address>
-    <swarm.port>28080</swarm.port>
     
     <project.parent.basedir>${project.basedir}/..</project.parent.basedir>
     <project.protocol.basedir>${project.parent.basedir}/box-protocol</project.protocol.basedir>
@@ -51,7 +46,7 @@
         <groupId>org.wildfly.swarm</groupId>
         <artifactId>wildfly-swarm-plugin</artifactId>
         <configuration>
-          <mainClass>io.fragilebox.client.App</mainClass>
+          <mainClass>io.fragilebox.protocol.benchmark.client.App</mainClass>
         </configuration>
         <executions>
           <execution>
@@ -107,67 +102,7 @@
           </execution>
         </executions>
       </plugin>
-      <!-- END Processing .proto files of protobuf -->
-      
-      <!-- Docker plugin configuration -->
-      <plugin>
-        <groupId>org.jolokia</groupId>
-        <artifactId>docker-maven-plugin</artifactId>
-        <configuration>
-          <images>
-            <image>
-              <name>${docker.image}</name>
-              <build>
-                <from>${docker.from}</from>
-                <maintainer>markus@jboss.org</maintainer>
-                <ports>
-                  <port>8080</port>
-                </ports>
-                <entryPoint>
-                  <exec>
-                    <arg>java</arg>
-                    <arg>-jar</arg>
-                    <arg>
-                      /opt/fragilebox/box-client.jar
-                    </arg>
-                  </exec>
-                </entryPoint>
-                <assembly>
-                  <inline>
-                    <dependencySets>
-                      <dependencySet>
-                        <useProjectAttachments>true
-                        </useProjectAttachments>
-                        <includes>
-                          <include>
-                            io.fragilebox:box-client:jar:swarm
-                          </include>
-                        </includes>
-                        <outputFileNameMapping>
-                          box-client.jar
-                        </outputFileNameMapping>
-                      </dependencySet>
-                    </dependencySets>
-                  </inline>
-                  <user>jboss:jboss:jboss</user>
-                  <basedir>/opt/fragilebox</basedir>
-                </assembly>
-              </build>
-              <run>
-                <ports>
-                  <!-- Map container port to ${swarm.port} -->
-                  <port>${swarm.port}:8080</port>
-                </ports>
-                <log>
-                  <color>yellow</color>
-                  <prefix>SWARM</prefix>
-                </log>
-              </run>
-            </image>
-          </images>
-        </configuration>
-      </plugin>
-      <!-- END Docker plugin configuration -->
+      <!-- END Processing .proto files of protobuf -->            
     </plugins>
   </build>
   

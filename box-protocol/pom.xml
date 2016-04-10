@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <groupId>io.fragilebox</groupId>
+    <artifactId>fragilebox</artifactId>    
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>box-protocol</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <modelVersion>4.0.0</modelVersion>  
+  <packaging>jar</packaging>
+  
+  <name>box-protocol</name>
+  <description>Protocol project for the FragileBox game</description>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>      
+      
+      <!-- Processing .proto files of protobuf -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>generate-sources</id>
+            <phase>generate-sources</phase>
+            <configuration>
+              <target>
+                <exec executable="protoc">
+                  <arg value="--java_out=${project.basedir}/src/main/java" />
+                  <arg value="--proto_path=${project.basedir}/src/main/java" />
+                  <arg value="${project.basedir}/src/main/java/io/fragilebox/protocol/BoxProtocol.proto" />
+                </exec>                
+              </target>              
+              <sourceRoot>target/generated-sources</sourceRoot>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- END Processing .proto files of protobuf -->        
+    </plugins>
+  </build>    
+</project>
